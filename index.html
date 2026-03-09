@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claire — Data-Drawn Product Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f2ec;
+    --cream: #ede9e0;
+    --accent: #c84b2f;
+    --accent2: #2563a8;
+    --muted: #6b6560;
+    --rule: #d4cfc6;
+    --highlight: #f0e8d0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem;
+    background: rgba(245, 242, 236, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex; gap: 2.5rem; list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding-top: 80px;
+  }
+
+  .hero-left {
+    padding: 6rem 3rem 4rem 4rem;
+    display: flex; flex-direction: column; justify-content: center;
+    border-right: 1px solid var(--rule);
+  }
+
+  .hero-eyebrow {
+    font-size: 0.68rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+
+  .hero-eyebrow::before {
+    content: ''; display: block;
+    width: 2rem; height: 1px;
+    background: var(--accent);
+  }
+
+  .hero-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(3.5rem, 6vw, 5.5rem);
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-name em {
+    font-style: italic; color: var(--accent2);
+  }
+
+  .hero-tagline {
+    font-size: 0.9rem; color: var(--muted);
+    max-width: 420px; margin-bottom: 2.5rem;
+    line-height: 1.8;
+  }
+
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .tag {
+    font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.4rem 0.9rem;
+    border: 1px solid var(--rule);
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: 2px;
+  }
+
+  .tag.accent { border-color: var(--accent); color: var(--accent); background: transparent; }
+  .tag.accent2 { border-color: var(--accent2); color: var(--accent2); background: transparent; }
+
+  .hero-cta {
+    display: flex; gap: 1rem;
+  }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 0.9rem 2rem;
+    text-decoration: none; border-radius: 2px;
+    transition: all 0.2s; cursor: pointer;
+    border: none; display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+  }
+  .btn-primary:hover { background: var(--accent); }
+
+  .btn-outline {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-outline:hover { border-color: var(--ink); }
+
+  .hero-right {
+    padding: 6rem 4rem 4rem 3rem;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+  }
+
+  .hero-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; margin-bottom: 3rem;
+  }
+
+  .stat-item {
+    padding: 2rem;
+    border-bottom: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+  }
+
+  .stat-item:nth-child(2n) { border-right: none; }
+  .stat-item:nth-last-child(-n+2) { border-bottom: none; }
+
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.8rem; line-height: 1;
+    color: var(--ink); margin-bottom: 0.4rem;
+  }
+
+  .stat-num span { color: var(--accent); }
+
+  .stat-label {
+    font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  .hero-companies {
+    padding: 1.5rem 0 0;
+  }
+
+  .companies-label {
+    font-size: 0.65rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .companies-list {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .company-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--ink); opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+
+  .company-badge:hover { opacity: 1; }
+
+  /* SECTION STRUCTURE */
+  section { border-top: 1px solid var(--rule); }
+
+  .section-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 6rem 4rem;
+  }
+
+  .section-header {
+    display: flex; align-items: baseline; gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+
+  .section-num {
+    font-size: 0.65rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--accent);
+    opacity: 0.7;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    color: var(--ink);
+  }
+
+  /* APPROACH SECTION */
+  .approach-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--rule);
+  }
+
+  .approach-card {
+    padding: 2.5rem;
+    border-right: 1px solid var(--rule);
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .approach-card:last-child { border-right: none; }
+  .approach-card:hover { background: var(--cream); }
+
+  .approach-card::before {
+    content: attr(data-num);
+    font-family: 'DM Serif Display', serif;
+    font-size: 5rem; line-height: 1;
+    color: var(--rule);
+    position: absolute; top: 1rem; right: 1.5rem;
+    transition: color 0.3s;
+  }
+
+  .approach-card:hover::before { color: var(--cream); }
+
+  .approach-icon {
+    font-size: 1.5rem; margin-bottom: 1.2rem;
+  }
+
+  .approach-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    margin-bottom: 0.8rem; color: var(--ink);
+  }
+
+  .approach-desc {
+    font-size: 0.8rem; color: var(--muted);
+    line-height: 1.8;
+  }
+
+  /* IMPACT / WORK SECTION */
+  .impact-list {
+    display: flex; flex-direction: column; gap: 0;
+  }
+
+  .impact-item {
+    display: grid; grid-template-columns: 140px 1fr auto;
+    align-items: start; gap: 3rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .impact-item:first-child { border-top: 1px solid var(--rule); }
+
+  .impact-item:hover {
+    padding-left: 1.5rem; padding-right: 1.5rem;
+    margin: 0 -1.5rem;
+    background: var(--cream);
+    border-radius: 2px;
+  }
+
+  .impact-company {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 0.9rem;
+    letter-spacing: 0.05em; color: var(--ink);
+  }
+
+  .impact-role {
+    font-size: 0.68rem; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  .impact-desc {
+    font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8;
+  }
+
+  .impact-metric {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem; color: var(--accent);
+    white-space: nowrap; text-align: right;
+    min-width: 100px;
+  }
+
+  .impact-metric-label {
+    font-size: 0.62rem; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-align: right; margin-top: 0.2rem;
+  }
+
+  /* SKILLS / STACK */
+  .stack-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; border: 1px solid var(--rule);
+  }
+
+  .stack-col {
+    padding: 2.5rem;
+    border-right: 1px solid var(--rule);
+  }
+
+  .stack-col:last-child { border-right: none; }
+
+  .stack-col-title {
+    font-size: 0.65rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1.5rem; padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .stack-items {
+    display: flex; flex-direction: column; gap: 0.6rem;
+  }
+
+  .stack-item {
+    font-size: 0.78rem; color: var(--ink);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .stack-item::before {
+    content: ''; display: block;
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* PROJECTS / CURRENTLY */
+  .projects-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 2px; background: var(--rule);
+  }
+
+  .project-card {
+    background: var(--paper);
+    padding: 3rem;
+    transition: background 0.3s;
+    position: relative;
+  }
+
+  .project-card:hover { background: var(--highlight); }
+
+  .project-status {
+    display: inline-block;
+    font-size: 0.62rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.2rem 0.6rem; border-radius: 20px;
+    margin-bottom: 1.5rem;
+  }
+
+  .project-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; color: var(--ink);
+    margin-bottom: 1rem; line-height: 1.2;
+  }
+
+  .project-desc {
+    font-size: 0.8rem; color: var(--muted);
+    line-height: 1.8; margin-bottom: 2rem;
+  }
+
+  .project-tags {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+
+  .project-tag {
+    font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.25rem 0.6rem;
+    background: var(--cream); color: var(--muted);
+    border-radius: 2px;
+  }
+
+  /* CONTACT */
+  .contact-section {
+    background: var(--ink);
+  }
+
+  .contact-section .section-inner {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6rem; align-items: center;
+  }
+
+  .contact-left .section-title { color: var(--paper); }
+  .contact-left .section-num { color: var(--accent); }
+
+  .contact-motto {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; font-style: italic;
+    color: var(--accent); margin: 2rem 0;
+    line-height: 1.4;
+  }
+
+  .contact-desc {
+    font-size: 0.82rem; color: rgba(245,242,236,0.5);
+    line-height: 1.8;
+  }
+
+  .contact-links {
+    display: flex; flex-direction: column; gap: 1.5rem;
+  }
+
+  .contact-link {
+    display: flex; align-items: center; gap: 1.5rem;
+    text-decoration: none; color: var(--paper);
+    padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .contact-link:hover {
+    border-color: var(--accent);
+    background: rgba(200, 75, 47, 0.08);
+  }
+
+  .contact-link-icon {
+    font-size: 1.2rem; width: 2.5rem; text-align: center;
+  }
+
+  .contact-link-text { font-size: 0.8rem; }
+  .contact-link-label {
+    font-size: 0.62rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(245,242,236,0.4);
+    display: block;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 2rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  footer p {
+    font-size: 0.68rem; color: rgba(245,242,236,0.3);
+    letter-spacing: 0.1em;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-eyebrow { animation: fadeUp 0.6s ease both; }
+  .hero-name { animation: fadeUp 0.6s 0.1s ease both; }
+  .hero-tagline { animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-tags { animation: fadeUp 0.6s 0.3s ease both; }
+  .hero-cta { animation: fadeUp 0.6s 0.4s ease both; }
+
+  /* MARQUEE */
+  .marquee-bar {
+    background: var(--ink); padding: 0.9rem 0;
+    overflow: hidden; display: flex;
+  }
+
+  .marquee-track {
+    display: flex; gap: 3rem;
+    animation: marquee 25s linear infinite;
+    white-space: nowrap;
+  }
+
+  .marquee-item {
+    font-size: 0.68rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(245,242,236,0.4);
+    flex-shrink: 0;
+  }
+
+  .marquee-item strong { color: var(--accent); }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+
+  /* ── COMPACT PORTFOLIO CARDS ── */
+  .pf-card {
+    border: 1px solid var(--rule);
+    margin-bottom: 2rem;
+    background: var(--paper);
+    transition: box-shadow 0.3s;
+  }
+  .pf-card:hover { box-shadow: 0 4px 28px rgba(0,0,0,0.06); }
+
+  .pf-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 1.8rem 2rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--cream);
+    gap: 2rem; flex-wrap: wrap;
+  }
+  .pf-top-left { flex: 1; min-width: 260px; }
+  .pf-company {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.25rem;
+    color: var(--ink); margin-bottom: 0.2rem;
+  }
+  .pf-role {
+    font-size: 0.65rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .pf-summary {
+    font-size: 0.78rem; color: var(--muted);
+    line-height: 1.75; margin-bottom: 1rem;
+    max-width: 520px;
+  }
+  .pf-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .chip {
+    font-size: 0.62rem; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.25rem 0.65rem;
+    border: 1px solid var(--rule); background: var(--paper);
+    color: var(--muted); border-radius: 2px;
+  }
+  .pf-kpis {
+    display: flex; gap: 1.5rem; flex-shrink: 0;
+    align-items: center;
+  }
+  .pf-kpi { text-align: center; }
+  .pf-kpi-n {
+    display: block;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem; color: var(--accent);
+    line-height: 1;
+  }
+  .pf-kpi-n sup { font-size: 0.9rem; }
+  .pf-kpi-l {
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    display: block; margin-top: 0.2rem;
+  }
+
+  .pf-viz {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--rule);
+  }
+  .pf-viz-label {
+    font-size: 0.62rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .pf-viz-row {
+    display: flex; gap: 1.5rem; align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .pf-chart-wrap {
+    min-width: 180px; flex: 1;
+  }
+  .viz-sublabel {
+    font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .viz-svg { width: 100%; height: auto; display: block; }
+
+  .pf-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: flex-end;
+    background: var(--cream);
+  }
+  .portfolio-link {
+    font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent2);
+    text-decoration: none; border-bottom: 1px solid var(--accent2);
+    padding-bottom: 1px; transition: opacity 0.2s;
+  }
+  .portfolio-link:hover { opacity: 0.65; }
+
+  /* Uber scorecard */
+  .uber-scorecard {
+    border: 1px solid var(--rule);
+    font-size: 0.72rem; overflow-x: auto;
+    background: var(--paper);
+  }
+  .usc-head {
+    display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
+    background: var(--ink); padding: 0;
+  }
+  .usc-head span {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: rgba(245,242,236,0.6);
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .usc-head span:last-child { border-right: none; }
+  .usc-row {
+    display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
+    border-bottom: 1px solid var(--rule);
+  }
+  .usc-row:last-of-type { border-bottom: none; }
+  .usc-row span {
+    padding: 0.5rem 0.7rem;
+    border-right: 1px solid var(--rule);
+    font-size: 0.72rem;
+  }
+  .usc-row span:last-child { border-right: none; padding: 0.3rem 0.5rem; }
+  .usc-flag { background: rgba(200,75,47,0.04); }
+  .usc-metric { color: var(--ink); }
+  .usc-val { font-weight: 500; color: var(--ink); }
+  .usc-up { color: #2e7d32; }
+  .usc-dn { color: var(--accent); }
+  .usc-fl { color: var(--muted); }
+  .usc-note-row {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.65rem; color: var(--muted);
+    border-top: 1px solid var(--rule);
+    background: var(--highlight);
+    grid-column: 1/-1;
+  }
+  .spark { width: 90px; height: 28px; display: block; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { border-right: none; padding: 6rem 2rem 3rem; }
+    .hero-right { padding: 3rem 2rem; }
+    .hero-stats { grid-template-columns: 1fr 1fr; }
+    .section-inner { padding: 4rem 2rem; }
+    .approach-grid { grid-template-columns: 1fr; }
+    .approach-card { border-right: none; border-bottom: 1px solid var(--rule); }
+    .stack-grid { grid-template-columns: 1fr 1fr; }
+    .stack-col:nth-child(2n) { border-right: none; }
+    .projects-grid { grid-template-columns: 1fr; }
+    .pf-top { flex-direction: column; }
+    .pf-kpis { gap: 1.2rem; }
+    .pf-viz-row { flex-direction: column; }
+    .pf-chart-wrap { min-width: unset; }
+    .usc-head, .usc-row { grid-template-columns: 2fr 1fr 0.7fr 0.7fr; }
+    .usc-head span:nth-child(5), .usc-head span:nth-child(6),
+    .usc-row span:nth-child(5), .usc-row span:nth-child(6) { display: none; }
+    .contact-section .section-inner { grid-template-columns: 1fr; gap: 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Claire · Portfolio</a>
+  <ul class="nav-links">
+    <li><a href="#approach">Approach</a></li>
+    <li><a href="#impact">Portfolio</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Staff Data Scientist · AI PM</div>
+    <h1 class="hero-name">Hi, I'm<br><em>Claire</em></h1>
+    <p class="hero-tagline">I turn data into products that matter. With 10+ years bridging analytics, experimentation, and product strategy — I build AI-powered products that solve real problems for real people.</p>
+    <div class="hero-tags">
+      <span class="tag accent">A/B Testing</span>
+      <span class="tag accent2">Causal Inference</span>
+      <span class="tag">Data Engineering</span>
+      <span class="tag">LLM Evaluation</span>
+      <span class="tag">AI Product</span>
+    </div>
+    <div class="hero-cta">
+      <a href="#impact" class="btn btn-primary">View My Work</a>
+      <a href="https://www.linkedin.com/in/clairehzhu" target="_blank" class="btn btn-outline">Let's Connect</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">10<span>+</span></div>
+        <div class="stat-label">Years in DS & Product</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">5<span>×</span></div>
+        <div class="stat-label">Team Growth · 2→10</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">30<span>%</span></div>
+        <div class="stat-label">Revenue Lift · Meta SMB Sales</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">40<span>+</span></div>
+        <div class="stat-label">Experiments & Causal Models</div>
+      </div>
+    </div>
+    <div class="hero-companies">
+      <div class="companies-label">Previously at</div>
+      <div class="companies-list">
+        <span class="company-badge">Meta</span>
+        <span class="company-badge">Uber</span>
+        <span class="company-badge">Upstart</span>
+        <span class="company-badge">Learneo</span>
+        <span class="company-badge">Zynga</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <div class="marquee-track">
+    <span class="marquee-item">Data Engineering</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Causal Inference</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">A/B Testing</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">LLM Integration</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Product Strategy</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Ads Measurement</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">dbt · Snowflake · SQL</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Diff-in-Diff</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item">Data Engineering</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Causal Inference</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">A/B Testing</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">LLM Integration</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Product Strategy</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Ads Measurement</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">dbt · Snowflake · SQL</span>
+    <span class="marquee-item"><strong>·</strong></span>
+    <span class="marquee-item">Diff-in-Diff</span>
+    <span class="marquee-item"><strong>·</strong></span>
+  </div>
+</div>
+
+<!-- APPROACH -->
+<section id="approach">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2 class="section-title">My Approach</h2>
+    </div>
+    <div class="approach-grid">
+      <div class="approach-card" data-num="1">
+        <div class="approach-icon">🔬</div>
+        <div class="approach-title">Diagnose, Then Redesign</div>
+        <div class="approach-desc">I don't just analyze systems — I diagnose them, understand root causes, and redesign the infrastructure that makes them permanently better. Causal inference isn't a buzzword; it's how I make decisions defensible.</div>
+      </div>
+      <div class="approach-card" data-num="2">
+        <div class="approach-icon">⚡</div>
+        <div class="approach-title">Full Arc Ownership</div>
+        <div class="approach-desc">My edge is the complete span — from raw data and experiment design to product strategy, cross-functional execution, and measurable business impact. I own 0→1 roadmaps and see them through.</div>
+      </div>
+      <div class="approach-card" data-num="3">
+        <div class="approach-icon">📐</div>
+        <div class="approach-title">LLM Evaluation & Measurement</div>
+        <div class="approach-desc">Designing rigorous evaluation frameworks for LLM-powered products — from prompt quality and output consistency to business metric impact. I apply the same causal inference rigor to AI systems that I bring to product experiments.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="impact">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2 class="section-title">Product Portfolio</h2>
+    </div>
+
+    <!-- ── UPSTART ── -->
+    <div class="pf-card" id="p-upstart">
+      <div class="pf-top">
+        <div class="pf-top-left">
+          <div class="pf-company">Upstart</div>
+          <div class="pf-role">Staff Data Scientist · Fintech · HELOC</div>
+          <p class="pf-summary">Built HELOC analytics infrastructure from zero — funnel dashboards, automation roadmap, and A/B testing framework that cut median decision time 38% and saved $600K+ annually.</p>
+          <div class="pf-chips">
+            <span class="chip">Analytics Infra</span><span class="chip">Ops Automation</span><span class="chip">A/B Testing</span><span class="chip">Fintech · HELOC</span><span class="chip">0→1</span>
+          </div>
+        </div>
+        <div class="pf-kpis">
+          <div class="pf-kpi"><span class="pf-kpi-n">38%</span><span class="pf-kpi-l">Decision Time ↓</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">30%</span><span class="pf-kpi-l">Auto-decisions</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">$600K<sup>+</sup></span><span class="pf-kpi-l">Annual Savings</span></div>
+        </div>
+      </div>
+      <div class="pf-viz">
+        <div class="pf-viz-label">HELOC Funnel · IR→CL Conversion &amp; Automation Progress</div>
+        <div class="pf-viz-row">
+          <!-- Funnel waterfall -->
+          <div class="pf-chart-wrap" style="flex:1">
+            <div class="viz-sublabel">Funnel Drop-off (per 100 applications)</div>
+            <svg viewBox="0 0 240 220" class="viz-svg">
+              <rect x="10" y="18" width="200" height="26" fill="#2563a8" rx="2"/>
+              <text x="16" y="36" font-size="9" fill="white" font-family="monospace" font-weight="500">Instant Run</text>
+              <text x="215" y="36" font-size="9" fill="#2563a8" font-family="monospace">100</text>
+              <rect x="10" y="52" width="180" height="26" fill="#2563a8" opacity=".8" rx="2"/>
+              <text x="16" y="70" font-size="9" fill="white" font-family="monospace">Ops Review</text>
+              <text x="195" y="70" font-size="9" fill="#2563a8" font-family="monospace">90</text>
+              <rect x="10" y="86" width="110" height="26" fill="#c84b2f" opacity=".7" rx="2"/>
+              <text x="16" y="104" font-size="9" fill="white" font-family="monospace">Declined</text>
+              <text x="125" y="104" font-size="9" fill="#c84b2f" font-family="monospace">−55</text>
+              <rect x="10" y="120" width="52" height="26" fill="#2e7d32" opacity=".8" rx="2"/>
+              <text x="16" y="138" font-size="9" fill="white" font-family="monospace">Approved</text>
+              <text x="66" y="138" font-size="9" fill="#2e7d32" font-family="monospace">26</text>
+              <rect x="10" y="154" width="22" height="26" fill="#c84b2f" opacity=".45" rx="2"/>
+              <text x="36" y="172" font-size="9" fill="#0d0d0d" font-family="monospace">Incomplete −11</text>
+              <rect x="10" y="188" width="40" height="22" fill="#1565c0" rx="2"/>
+              <text x="16" y="204" font-size="9" fill="white" font-family="monospace" font-weight="600">Closed ✓  20</text>
+              <line x1="90" y1="188" x2="90" y2="214" stroke="#c84b2f" stroke-width="1" stroke-dasharray="3,2"/>
+              <text x="56" y="219" font-size="8" fill="#c84b2f" font-family="monospace">Goal: 40 closed</text>
+            </svg>
+          </div>
+          <!-- IR→CL trend -->
+          <div class="pf-chart-wrap" style="flex:1.6">
+            <div class="viz-sublabel">IR→CL Weekly Rate · Backlog vs. Automation Launches (Goal 40%)</div>
+            <svg viewBox="0 0 380 220" class="viz-svg">
+              <line x1="38" y1="10" x2="38" y2="175" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="38" y1="175" x2="370" y2="175" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="38" y1="140" x2="370" y2="140" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="38" y1="105" x2="370" y2="105" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="38" y1="70" x2="370" y2="70" stroke="#ede9e0" stroke-width="1"/>
+              <text x="2" y="178" font-size="8" fill="#6b6560" font-family="monospace">0%</text>
+              <text x="2" y="143" font-size="8" fill="#6b6560" font-family="monospace">10%</text>
+              <text x="2" y="108" font-size="8" fill="#6b6560" font-family="monospace">20%</text>
+              <text x="2" y="73" font-size="8" fill="#6b6560" font-family="monospace">30%</text>
+              <line x1="38" y1="35" x2="370" y2="35" stroke="#c84b2f" stroke-width="1.5" stroke-dasharray="5,3"/>
+              <text x="335" y="30" font-size="8" fill="#c84b2f" font-family="monospace">Goal 40%</text>
+              <polyline points="45,56 75,102 105,129 125,123 145,131 170,109 195,109 215,109 240,92 260,96 280,105 300,109 320,129 345,160 365,160" fill="none" stroke="#2563a8" stroke-width="2.5" stroke-linejoin="round"/>
+              <polygon points="45,56 75,102 105,129 125,123 145,131 170,109 195,109 215,109 240,92 260,96 280,105 300,109 320,129 345,160 365,160 365,175 45,175" fill="rgba(37,99,168,0.07)"/>
+              <line x1="240" y1="10" x2="240" y2="175" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <text x="243" y="22" font-size="8" fill="#2e7d32" font-family="monospace">Lien DQ auto</text>
+              <text x="243" y="32" font-size="8" fill="#2e7d32" font-family="monospace">+12pp →</text>
+              <text x="38" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Nov 2024</text>
+              <text x="155" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Jan 2025</text>
+              <text x="305" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Mar 2025</text>
+              <text x="42" y="207" font-size="7.5" fill="#6b6560" font-family="monospace">Analytics infra + automation roadmap drove capacity recovery</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="pf-footer"><a href="https://heloc.upstartmortgage.com" target="_blank" class="portfolio-link">Upstart HELOC Product ↗</a></div>
+    </div>
+
+    <!-- ── META ── -->
+    <div class="pf-card" id="p-meta">
+      <div class="pf-top">
+        <div class="pf-top-left">
+          <div class="pf-company">Meta</div>
+          <div class="pf-role">Data Scientist · Ads Measurement · SMB Cross-Border</div>
+          <p class="pf-summary">Designed diff-in-diff + permutation test framework for Cross-Border Business ads product. Cluster randomization ruled out standard A/B — permutation testing confirmed 30% revenue lift. Became SMB standard measurement playbook.</p>
+          <div class="pf-chips">
+            <span class="chip">Causal Inference</span><span class="chip">Diff-in-Diff</span><span class="chip">Permutation Testing</span><span class="chip">Ads Measurement</span><span class="chip">SMB</span>
+          </div>
+        </div>
+        <div class="pf-kpis">
+          <div class="pf-kpi"><span class="pf-kpi-n">30%</span><span class="pf-kpi-l">Revenue Lift</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">p&lt;.01</span><span class="pf-kpi-l">Permutation Test</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">Org-wide</span><span class="pf-kpi-l">Playbook</span></div>
+        </div>
+      </div>
+      <div class="pf-viz">
+        <div class="pf-viz-label">Diff-in-Diff · Permutation Test · Experiment Design</div>
+        <div class="pf-viz-row">
+          <!-- Parallel trends -->
+          <div class="pf-chart-wrap" style="flex:1.5">
+            <div class="viz-sublabel">Revenue Index · Parallel Trends Pre-treatment → Divergence Post-launch</div>
+            <svg viewBox="0 0 400 210" class="viz-svg">
+              <line x1="42" y1="10" x2="42" y2="170" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="42" y1="170" x2="390" y2="170" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="42" y1="135" x2="390" y2="135" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="42" y1="100" x2="390" y2="100" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="42" y1="65" x2="390" y2="65" stroke="#ede9e0" stroke-width="1"/>
+              <text x="4" y="173" font-size="7.5" fill="#6b6560" font-family="monospace">80</text>
+              <text x="4" y="138" font-size="7.5" fill="#6b6560" font-family="monospace">90</text>
+              <text x="4" y="103" font-size="7.5" fill="#6b6560" font-family="monospace">100</text>
+              <text x="4" y="68" font-size="7.5" fill="#6b6560" font-family="monospace">110</text>
+              <!-- Pre-period: parallel slopes -->
+              <polyline points="50,108 85,104 120,100 155,98 190,97 222,95" fill="none" stroke="#2563a8" stroke-width="2" stroke-dasharray="5,2"/>
+              <polyline points="50,115 85,113 120,110 155,109 190,108 222,107" fill="none" stroke="#6b6560" stroke-width="2" stroke-dasharray="5,2"/>
+              <!-- Post: diverge -->
+              <polyline points="222,95 258,74 294,57 330,44 370,33" fill="none" stroke="#2563a8" stroke-width="2.5"/>
+              <polyline points="222,107 258,106 294,105 330,104 370,103" fill="none" stroke="#6b6560" stroke-width="2.5" stroke-dasharray="6,3"/>
+              <!-- Counterfactual -->
+              <polyline points="222,95 258,93 294,91 330,90 370,89" fill="none" stroke="#2563a8" stroke-width="1.5" stroke-dasharray="3,3" opacity=".45"/>
+              <!-- Launch line -->
+              <line x1="222" y1="10" x2="222" y2="170" stroke="#c84b2f" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <text x="226" y="22" font-size="8" fill="#c84b2f" font-family="monospace">CBB</text>
+              <text x="226" y="32" font-size="8" fill="#c84b2f" font-family="monospace">Launch</text>
+              <!-- DiD bracket -->
+              <line x1="372" y1="33" x2="372" y2="103" stroke="#c84b2f" stroke-width="2"/>
+              <line x1="367" y1="33" x2="377" y2="33" stroke="#c84b2f" stroke-width="2"/>
+              <line x1="367" y1="103" x2="377" y2="103" stroke="#c84b2f" stroke-width="2"/>
+              <text x="350" y="63" font-size="10" fill="#c84b2f" font-family="monospace" font-weight="700">+30%</text>
+              <text x="350" y="74" font-size="7.5" fill="#c84b2f" font-family="monospace">DiD est.</text>
+              <!-- Series labels -->
+              <text x="56" y="90" font-size="8" fill="#2563a8" font-family="monospace">CBB Test</text>
+              <text x="56" y="126" font-size="8" fill="#6b6560" font-family="monospace">Control</text>
+              <text x="240" y="86" font-size="7.5" fill="#2563a8" font-family="monospace" opacity=".55">counterfactual</text>
+              <!-- Pre/post labels -->
+              <text x="80" y="188" font-size="7.5" fill="#6b6560" font-family="monospace">← Pre-treatment (parallel trends validated)</text>
+              <text x="240" y="188" font-size="7.5" fill="#c84b2f" font-family="monospace">Post-treatment →</text>
+            </svg>
+          </div>
+          <!-- Permutation dist -->
+          <div class="pf-chart-wrap" style="flex:1.1">
+            <div class="viz-sublabel">Permutation Null Distribution · 10,000 shuffles</div>
+            <svg viewBox="0 0 265 210" class="viz-svg">
+              <line x1="20" y1="10" x2="20" y2="167" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="20" y1="167" x2="260" y2="167" stroke="#d4cfc6" stroke-width="1"/>
+              <rect x="25" y="160" width="9" height="7" fill="#d4cfc6" rx="1"/>
+              <rect x="36" y="152" width="9" height="15" fill="#d4cfc6" rx="1"/>
+              <rect x="47" y="140" width="9" height="27" fill="#d4cfc6" rx="1"/>
+              <rect x="58" y="122" width="9" height="45" fill="#d4cfc6" rx="1"/>
+              <rect x="69" y="102" width="9" height="65" fill="#d4cfc6" rx="1"/>
+              <rect x="80" y="84" width="9" height="83" fill="#d4cfc6" rx="1"/>
+              <rect x="91" y="67" width="9" height="100" fill="#d4cfc6" rx="1"/>
+              <rect x="102" y="54" width="9" height="113" fill="#d4cfc6" rx="1"/>
+              <rect x="113" y="48" width="9" height="119" fill="#d4cfc6" rx="1"/>
+              <rect x="124" y="54" width="9" height="113" fill="#d4cfc6" rx="1"/>
+              <rect x="135" y="67" width="9" height="100" fill="#d4cfc6" rx="1"/>
+              <rect x="146" y="84" width="9" height="83" fill="#d4cfc6" rx="1"/>
+              <rect x="157" y="102" width="9" height="65" fill="#d4cfc6" rx="1"/>
+              <rect x="168" y="122" width="9" height="45" fill="#d4cfc6" rx="1"/>
+              <rect x="179" y="140" width="9" height="27" fill="#d4cfc6" rx="1"/>
+              <rect x="190" y="152" width="9" height="15" fill="#d4cfc6" rx="1"/>
+              <rect x="201" y="160" width="9" height="7" fill="#d4cfc6" rx="1"/>
+              <!-- p-value shaded region -->
+              <rect x="214" y="160" width="40" height="7" fill="rgba(200,75,47,0.2)" rx="1"/>
+              <line x1="243" y1="14" x2="243" y2="167" stroke="#c84b2f" stroke-width="2.5"/>
+              <text x="213" y="20" font-size="8" fill="#c84b2f" font-family="monospace">observed</text>
+              <text x="215" y="30" font-size="8" fill="#c84b2f" font-family="monospace">+30% DiD</text>
+              <text x="215" y="40" font-size="8.5" fill="#c84b2f" font-family="monospace" font-weight="600">p &lt; 0.01</text>
+              <text x="22" y="182" font-size="7.5" fill="#6b6560" font-family="monospace">Null DiD estimates (random label permutation)</text>
+              <text x="75" y="196" font-size="7.5" fill="#6b6560" font-family="monospace">H₀: no treatment effect (rejected)</text>
+            </svg>
+          </div>
+          <!-- Design diagram -->
+          <div class="pf-chart-wrap" style="flex:0.85">
+            <div class="viz-sublabel">Cluster Assignment Design</div>
+            <svg viewBox="0 0 175 210" class="viz-svg">
+              <rect x="10" y="15" width="152" height="22" fill="#ede9e0" rx="2"/>
+              <text x="86" y="30" font-size="8.5" fill="#0d0d0d" font-family="monospace" text-anchor="middle">SMBs (N≈500)</text>
+              <line x1="86" y1="37" x2="86" y2="52" stroke="#d4cfc6" stroke-width="1.5"/>
+              <line x1="86" y1="52" x2="44" y2="52" stroke="#d4cfc6" stroke-width="1.5"/>
+              <line x1="86" y1="52" x2="128" y2="52" stroke="#d4cfc6" stroke-width="1.5"/>
+              <line x1="44" y1="52" x2="44" y2="65" stroke="#d4cfc6" stroke-width="1.5"/>
+              <line x1="128" y1="52" x2="128" y2="65" stroke="#d4cfc6" stroke-width="1.5"/>
+              <rect x="8" y="65" width="68" height="38" fill="rgba(37,99,168,0.12)" stroke="#2563a8" stroke-width="1" rx="2"/>
+              <text x="42" y="81" font-size="8" fill="#2563a8" font-family="monospace" text-anchor="middle">TEST 50%</text>
+              <text x="42" y="93" font-size="7.5" fill="#2563a8" font-family="monospace" text-anchor="middle">CBB treatment</text>
+              <rect x="96" y="65" width="68" height="38" fill="rgba(107,101,96,0.1)" stroke="#6b6560" stroke-width="1" rx="2"/>
+              <text x="130" y="81" font-size="8" fill="#6b6560" font-family="monospace" text-anchor="middle">CONTROL</text>
+              <text x="130" y="93" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">no treatment</text>
+              <text x="86" y="122" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Sales reps also 50/50</text>
+              <text x="86" y="133" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">(cluster randomization)</text>
+              <rect x="18" y="142" width="136" height="22" fill="rgba(200,75,47,0.1)" stroke="#c84b2f" stroke-width="1" rx="2"/>
+              <text x="86" y="157" font-size="7.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">DiD = (Δtest) − (Δcontrol)</text>
+              <text x="86" y="180" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Standard A/B invalid:</text>
+              <text x="86" y="192" font-size="7.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">cluster SE inflation</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="pf-footer"><a href="https://www.facebook.com/business/ads" target="_blank" class="portfolio-link">Meta Ads ↗</a></div>
+    </div>
+
+    <!-- ── UBER ── -->
+    <div class="pf-card" id="p-uber">
+      <div class="pf-top">
+        <div class="pf-top-left">
+          <div class="pf-company">Uber</div>
+          <div class="pf-role">Data Scientist · Uber for Business · Experimentation</div>
+          <p class="pf-summary">Built 0→1 weekly executive scorecard for Uber for Business with 28-day rolling windows, New Users/MAU sustainability signal, and cross-sell visibility. Led org-wide A/B testing standardization task force across all product teams.</p>
+          <div class="pf-chips">
+            <span class="chip">Executive Dashboard</span><span class="chip">A/B Testing</span><span class="chip">Experiment Standardization</span><span class="chip">Cross-sell</span><span class="chip">Onboarding</span>
+          </div>
+        </div>
+        <div class="pf-kpis">
+          <div class="pf-kpi"><span class="pf-kpi-n">0→1</span><span class="pf-kpi-l">Scorecard Built</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">Org-wide</span><span class="pf-kpi-l">Exp. Standard</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">28-day</span><span class="pf-kpi-l">Rolling Windows</span></div>
+        </div>
+      </div>
+      <div class="pf-viz">
+        <div class="pf-viz-label">U4B Weekly Executive Scorecard · Onboarding Funnel</div>
+        <div class="pf-viz-row">
+          <!-- Scorecard with sparklines -->
+          <div class="pf-chart-wrap" style="flex:1.9">
+            <div class="viz-sublabel">Topline Metrics · Seasonality-adjusted (28-day rolling)</div>
+            <div class="uber-scorecard">
+              <div class="usc-head">
+                <span>Metric</span><span>Value</span><span>W/W</span><span>M/M</span><span>Y/Y</span><span style="min-width:90px">12-week trend</span>
+              </div>
+              <div class="usc-row">
+                <span class="usc-metric">Active Orgs</span>
+                <span class="usc-val" style="color:var(--muted);font-style:italic">—</span>
+                <span class="usc-up">+2.1%</span><span class="usc-up">+8.4%</span><span class="usc-up">+31%</span>
+                <span><svg viewBox="0 0 90 28" class="spark"><polyline points="0,22 8,20 16,18 24,15 32,14 40,11 48,12 56,9 64,7 72,6 80,4 88,2" fill="none" stroke="#2563a8" stroke-width="1.8"/></svg></span>
+              </div>
+              <div class="usc-row">
+                <span class="usc-metric">Active Riders</span>
+                <span class="usc-val" style="color:var(--muted);font-style:italic">—</span>
+                <span class="usc-up">+1.8%</span><span class="usc-up">+6.2%</span><span class="usc-up">+24%</span>
+                <span><svg viewBox="0 0 90 28" class="spark"><polyline points="0,24 8,22 16,20 24,18 32,17 40,15 48,16 56,13 64,11 72,9 80,8 88,5" fill="none" stroke="#2563a8" stroke-width="1.8"/></svg></span>
+              </div>
+              <div class="usc-row usc-flag">
+                <span class="usc-metric">New Users / MAU ⚑</span>
+                <span class="usc-val" style="color:var(--muted);font-style:italic">—</span>
+                <span class="usc-dn">−0.4pp</span><span class="usc-up">+1.1pp</span><span class="usc-dn">−2pp</span>
+                <span><svg viewBox="0 0 90 28" class="spark"><polyline points="0,8 8,10 16,11 24,12 32,14 40,15 48,14 56,16 64,17 72,18 80,19 88,20" fill="none" stroke="#c84b2f" stroke-width="1.8"/></svg></span>
+              </div>
+              <div class="usc-row">
+                <span class="usc-metric">Rides+Eats X-sell %</span>
+                <span class="usc-val" style="color:var(--muted);font-style:italic">—</span>
+                <span class="usc-up">+0.8pp</span><span class="usc-up">+3.2pp</span><span class="usc-up">+9pp</span>
+                <span><svg viewBox="0 0 90 28" class="spark"><polyline points="0,22 8,21 16,20 24,18 32,16 40,14 48,13 56,11 64,10 72,9 80,8 88,6" fill="none" stroke="#2563a8" stroke-width="1.8"/></svg></span>
+              </div>
+              <div class="usc-row">
+                <span class="usc-metric">Self-serve Signup</span>
+                <span class="usc-val" style="color:var(--muted);font-style:italic">—</span>
+                <span class="usc-fl">—</span><span class="usc-dn">−1pp</span><span class="usc-up">+5pp</span>
+                <span><svg viewBox="0 0 90 28" class="spark"><polyline points="0,18 8,18 16,17 24,16 32,16 40,15 48,15 56,16 64,15 72,14 80,14 88,13" fill="none" stroke="#6b6560" stroke-width="1.8"/></svg></span>
+              </div>
+              <div class="usc-note-row">⚑ New Users/MAU declining Y/Y — growth shifting toward retained users. Healthy signal for mature products; monitor for saturation. &nbsp;·&nbsp; <em>Absolute values redacted · % changes and trend directions are illustrative of the framework design</em></div>
+            </div>
+          </div>
+          <!-- Onboarding funnel -->
+          <div class="pf-chart-wrap" style="flex:1">
+            <div class="viz-sublabel">Onboarding Funnel · Org Signup Drop-off</div>
+            <svg viewBox="0 0 200 210" class="viz-svg">
+              <rect x="10" y="15" width="178" height="24" fill="#2563a8" rx="2"/>
+              <text x="99" y="31" font-size="8.5" fill="white" font-family="monospace" text-anchor="middle">Landing · 100%</text>
+              <rect x="25" y="47" width="148" height="24" fill="#2563a8" opacity=".82" rx="2"/>
+              <text x="99" y="63" font-size="8.5" fill="white" font-family="monospace" text-anchor="middle">Start Signup · 72%</text>
+              <rect x="40" y="79" width="118" height="24" fill="#2563a8" opacity=".65" rx="2"/>
+              <text x="99" y="95" font-size="8.5" fill="white" font-family="monospace" text-anchor="middle">Complete Form · 55%</text>
+              <rect x="56" y="111" width="86" height="24" fill="#2563a8" opacity=".5" rx="2"/>
+              <text x="99" y="127" font-size="8.5" fill="#0d0d0d" font-family="monospace" text-anchor="middle">Email Verified · 40%</text>
+              <rect x="70" y="143" width="58" height="24" fill="#c84b2f" opacity=".7" rx="2"/>
+              <text x="99" y="159" font-size="8.5" fill="white" font-family="monospace" text-anchor="middle">First Ride · 26%</text>
+              <line x1="143" y1="111" x2="170" y2="111" stroke="#c84b2f" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="143" y1="143" x2="170" y2="143" stroke="#c84b2f" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="170" y1="111" x2="170" y2="143" stroke="#c84b2f" stroke-width="1.5"/>
+              <text x="173" y="130" font-size="7.5" fill="#c84b2f" font-family="monospace">−14pp</text>
+              <text x="99" y="183" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Email verify = biggest drop-off</text>
+              <text x="99" y="196" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">→ fed to product roadmap</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- CUPED SECTION -->
+      <div class="pf-viz" style="border-top: 2px solid var(--rule); background: var(--highlight);">
+        <div class="pf-viz-label" style="color:var(--accent2)">Methodology Deep-dive · CUPED for Small Business Experiment Evaluation</div>
+        <div class="pf-viz-row">
+          <!-- Why CUPED explainer -->
+          <div class="pf-chart-wrap" style="flex:1.1">
+            <div class="viz-sublabel">Why CUPED? The Small Business Experiment Problem</div>
+            <svg viewBox="0 0 240 220" class="viz-svg">
+              <rect x="8" y="10" width="224" height="22" fill="#ede9e0" rx="2"/>
+              <text x="120" y="25" font-size="8.5" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Challenge: High Variance in SMB Metrics</text>
+              <!-- Problem description boxes -->
+              <rect x="8" y="40" width="224" height="36" fill="rgba(200,75,47,0.06)" stroke="#c84b2f" stroke-width="1" rx="2"/>
+              <text x="120" y="54" font-size="8" fill="#0d0d0d" font-family="monospace" text-anchor="middle">Small businesses have highly variable spend:</text>
+              <text x="120" y="66" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">seasonal spikes, budget cycles, onboarding effects</text>
+              <text x="120" y="77" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">→ massive noise masks true experiment signal</text>
+              <!-- Standard AB vs CUPED -->
+              <text x="10" y="98" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Standard A/B vs. CUPED</text>
+              <rect x="8" y="105" width="106" height="52" fill="rgba(107,101,96,0.08)" stroke="#6b6560" stroke-width="1" rx="2"/>
+              <text x="61" y="118" font-size="8" fill="#6b6560" font-family="monospace" text-anchor="middle" font-weight="600">Standard A/B</text>
+              <text x="61" y="130" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">High variance</text>
+              <text x="61" y="141" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">N=800 needed</text>
+              <text x="61" y="152" font-size="7.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">8 weeks runtime</text>
+              <rect x="126" y="105" width="106" height="52" fill="rgba(37,99,168,0.08)" stroke="#2563a8" stroke-width="1" rx="2"/>
+              <text x="179" y="118" font-size="8" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">CUPED</text>
+              <text x="179" y="130" font-size="7.5" fill="#2563a8" font-family="monospace" text-anchor="middle">Variance −40%</text>
+              <text x="179" y="141" font-size="7.5" fill="#2563a8" font-family="monospace" text-anchor="middle">N=480 needed</text>
+              <text x="179" y="152" font-size="7.5" fill="#2e7d32" font-family="monospace" text-anchor="middle">5 weeks runtime ✓</text>
+              <!-- CUPED formula -->
+              <rect x="8" y="168" width="224" height="28" fill="rgba(37,99,168,0.06)" stroke="#2563a8" stroke-width="1" rx="2"/>
+              <text x="120" y="181" font-size="8" fill="#2563a8" font-family="monospace" text-anchor="middle">Ỹᵢ = Yᵢ − θ · Xᵢ</text>
+              <text x="120" y="191" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Ỹ = adjusted metric · X = pre-exp covariate · θ = Cov(Y,X)/Var(X)</text>
+              <text x="120" y="210" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Pre-exp GMV/trips used as covariate for U4B orgs</text>
+            </svg>
+          </div>
+          <!-- Variance reduction visual -->
+          <div class="pf-chart-wrap" style="flex:1.2">
+            <div class="viz-sublabel">Variance Reduction · Pre vs. Post CUPED Adjustment</div>
+            <svg viewBox="0 0 255 220" class="viz-svg">
+              <line x1="30" y1="10" x2="30" y2="170" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="30" y1="170" x2="248" y2="170" stroke="#d4cfc6" stroke-width="1"/>
+              <!-- Y axis = metric value, x = obs -->
+              <line x1="30" y1="130" x2="248" y2="130" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="90" x2="248" y2="90" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="50" x2="248" y2="50" stroke="#ede9e0" stroke-width="1"/>
+              <text x="2" y="173" font-size="7" fill="#6b6560" font-family="monospace">low</text>
+              <text x="2" y="93" font-size="7" fill="#6b6560" font-family="monospace">mid</text>
+              <text x="2" y="53" font-size="7" fill="#6b6560" font-family="monospace">high</text>
+              <!-- Raw metric (noisy) - gray scattered -->
+              <polyline points="35,45 50,120 65,55 80,135 95,48 110,118 125,62 140,125 155,52 170,108 185,65 200,130 215,58 230,115 245,70"
+                fill="none" stroke="#d4cfc6" stroke-width="1.5"/>
+              <!-- Mean line raw -->
+              <line x1="35" y1="90" x2="245" y2="90" stroke="#6b6560" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- CUPED-adjusted (smooth) -->
+              <polyline points="35,88 50,86 65,91 80,88 95,90 110,87 125,92 140,88 155,86 170,91 185,89 200,87 215,91 230,88 245,90"
+                fill="none" stroke="#2563a8" stroke-width="2.5"/>
+              <!-- Variance annotation: raw -->
+              <line x1="50" y1="45" x2="50" y2="120" stroke="#6b6560" stroke-width="1.5"/>
+              <line x1="46" y1="45" x2="54" y2="45" stroke="#6b6560" stroke-width="1.5"/>
+              <line x1="46" y1="120" x2="54" y2="120" stroke="#6b6560" stroke-width="1.5"/>
+              <text x="55" y="78" font-size="8" fill="#c84b2f" font-family="monospace">σ²=</text>
+              <text x="55" y="88" font-size="8" fill="#c84b2f" font-family="monospace">0.42</text>
+              <!-- Variance annotation: CUPED -->
+              <line x1="200" y1="83" x2="200" y2="95" stroke="#2563a8" stroke-width="1.5"/>
+              <line x1="196" y1="83" x2="204" y2="83" stroke="#2563a8" stroke-width="1.5"/>
+              <line x1="196" y1="95" x2="204" y2="95" stroke="#2563a8" stroke-width="1.5"/>
+              <text x="206" y="90" font-size="8" fill="#2563a8" font-family="monospace">σ²=0.25</text>
+              <!-- Legend -->
+              <line x1="35" y1="188" x2="60" y2="188" stroke="#d4cfc6" stroke-width="2"/>
+              <text x="63" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Raw metric (high variance)</text>
+              <line x1="35" y1="202" x2="60" y2="202" stroke="#2563a8" stroke-width="2.5"/>
+              <text x="63" y="206" font-size="7.5" fill="#2563a8" font-family="monospace">CUPED-adjusted (−40% variance)</text>
+            </svg>
+          </div>
+          <!-- Power analysis impact -->
+          <div class="pf-chart-wrap" style="flex:1">
+            <div class="viz-sublabel">Sample Size &amp; Runtime Saved · U4B Experiments</div>
+            <svg viewBox="0 0 210 220" class="viz-svg">
+              <!-- Required N comparison -->
+              <text x="10" y="18" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Required Sample Size (80% power)</text>
+              <!-- Standard AB bar -->
+              <text x="10" y="34" font-size="7.5" fill="#6b6560" font-family="monospace">Standard A/B</text>
+              <rect x="90" y="25" width="110" height="13" fill="#c84b2f" opacity=".5" rx="1"/>
+              <text x="203" y="36" font-size="7.5" fill="#c84b2f" font-family="monospace"> 800</text>
+              <!-- CUPED bar -->
+              <text x="10" y="52" font-size="7.5" fill="#6b6560" font-family="monospace">CUPED</text>
+              <rect x="90" y="43" width="66" height="13" fill="#2563a8" opacity=".6" rx="1"/>
+              <text x="159" y="54" font-size="7.5" fill="#2563a8" font-family="monospace"> 480</text>
+              <text x="159" y="64" font-size="7.5" fill="#2e7d32" font-family="monospace"> −40% ✓</text>
+              <!-- Runtime comparison -->
+              <text x="10" y="82" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Experiment Runtime</text>
+              <text x="10" y="96" font-size="7.5" fill="#6b6560" font-family="monospace">Standard A/B</text>
+              <rect x="90" y="87" width="100" height="13" fill="#c84b2f" opacity=".5" rx="1"/>
+              <text x="193" y="98" font-size="7.5" fill="#c84b2f" font-family="monospace"> 8wk</text>
+              <text x="10" y="114" font-size="7.5" fill="#6b6560" font-family="monospace">CUPED</text>
+              <rect x="90" y="105" width="60" height="13" fill="#2563a8" opacity=".6" rx="1"/>
+              <text x="153" y="116" font-size="7.5" fill="#2563a8" font-family="monospace"> 5wk</text>
+              <text x="153" y="126" font-size="7.5" fill="#2e7d32" font-family="monospace"> −38% ✓</text>
+              <!-- Covariates used -->
+              <text x="10" y="146" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Covariates (pre-exp window)</text>
+              <text x="10" y="159" font-size="7.5" fill="#6b6560" font-family="monospace">• Org GMV (prior 28d)</text>
+              <text x="10" y="171" font-size="7.5" fill="#6b6560" font-family="monospace">• Trip count (prior 28d)</text>
+              <text x="10" y="183" font-size="7.5" fill="#6b6560" font-family="monospace">• Rider count (prior 28d)</text>
+              <rect x="8" y="193" width="194" height="22" fill="rgba(37,99,168,0.08)" stroke="#2563a8" stroke-width="1" rx="2"/>
+              <text x="105" y="205" font-size="7.5" fill="#2563a8" font-family="monospace" text-anchor="middle">Enabled faster iteration on U4B product</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="pf-footer"><a href="https://www.uber.com/us/en/business/" target="_blank" class="portfolio-link">Uber for Business ↗</a></div>
+    </div>
+    <div class="pf-card" id="p-learneo">
+      <div class="pf-top">
+        <div class="pf-top-left">
+          <div class="pf-company">Learneo / Course Hero</div>
+          <div class="pf-role">Head of Analytics · EdTech · Marketplace</div>
+          <p class="pf-summary">Rebuilt the semantic matching system serving 100K+ students — raised match rate from 50% to 55% (10% relative lift), 3% revenue uplift. Optimized onboarding funnels and search ranking. Scaled the analytics team from 2 to 10.</p>
+          <div class="pf-chips">
+            <span class="chip">Semantic Matching</span><span class="chip">Onboarding Optimization</span><span class="chip">Search Quality</span><span class="chip">Team Building · 2→10</span>
+          </div>
+        </div>
+        <div class="pf-kpis">
+          <div class="pf-kpi"><span class="pf-kpi-n">50→55%</span><span class="pf-kpi-l">Match Rate</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">3%</span><span class="pf-kpi-l">Revenue Uplift</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">2→10</span><span class="pf-kpi-l">Team Scaled</span></div>
+        </div>
+      </div>
+      <div class="pf-viz">
+        <div class="pf-viz-label">Matching System · Search Quality · Team Growth</div>
+        <div class="pf-viz-row">
+          <!-- Match accuracy bars -->
+          <div class="pf-chart-wrap" style="flex:1">
+            <div class="viz-sublabel">Match Accuracy &amp; Revenue · Before vs. After Rebuild</div>
+            <svg viewBox="0 0 210 200" class="viz-svg">
+              <line x1="30" y1="10" x2="30" y2="155" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="30" y1="155" x2="200" y2="155" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="30" y1="120" x2="200" y2="120" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="85" x2="200" y2="85" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="50" x2="200" y2="50" stroke="#ede9e0" stroke-width="1"/>
+              <text x="2" y="158" font-size="7.5" fill="#6b6560" font-family="monospace">30</text>
+              <text x="2" y="123" font-size="7.5" fill="#6b6560" font-family="monospace">40</text>
+              <text x="2" y="88" font-size="7.5" fill="#6b6560" font-family="monospace">50</text>
+              <text x="2" y="53" font-size="7.5" fill="#6b6560" font-family="monospace">60</text>
+              <!-- Before bar: 50% → maps to y=85 (50% line) -->
+              <rect x="42" y="85" width="34" height="70" fill="#d4cfc6" rx="2"/>
+              <text x="59" y="81" font-size="8" fill="#6b6560" font-family="monospace" text-anchor="middle">50%</text>
+              <text x="59" y="172" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Before</text>
+              <!-- After bar: 55% → maps to y=71.5, height=83.5 -->
+              <rect x="88" y="71" width="34" height="84" fill="#2563a8" rx="2"/>
+              <text x="105" y="67" font-size="8" fill="#2563a8" font-family="monospace" text-anchor="middle">55%</text>
+              <text x="105" y="172" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">After</text>
+              <!-- Lift bracket -->
+              <line x1="136" y1="71" x2="136" y2="85" stroke="#c84b2f" stroke-width="2"/>
+              <line x1="131" y1="71" x2="141" y2="71" stroke="#c84b2f" stroke-width="2"/>
+              <line x1="131" y1="85" x2="141" y2="85" stroke="#c84b2f" stroke-width="2"/>
+              <text x="143" y="79" font-size="9" fill="#c84b2f" font-family="monospace" font-weight="600">+10%</text>
+              <!-- Revenue lift small bars -->
+              <rect x="158" y="112" width="28" height="43" fill="#ede9e0" rx="2"/>
+              <rect x="158" y="100" width="28" height="55" fill="#2e7d32" opacity=".65" rx="2"/>
+              <text x="172" y="95" font-size="8" fill="#2e7d32" font-family="monospace" text-anchor="middle">+3%</text>
+              <text x="172" y="172" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Rev uplift</text>
+            </svg>
+          </div>
+          <!-- Search health bars -->
+          <div class="pf-chart-wrap" style="flex:1.1">
+            <div class="viz-sublabel">Search Quality · Health Metrics Before → After</div>
+            <svg viewBox="0 0 215 200" class="viz-svg">
+              <text x="10" y="20" font-size="7.5" fill="#6b6560" font-family="monospace">Zero-Result Rate (↓ better)</text>
+              <rect x="10" y="25" width="185" height="13" fill="#ede9e0" rx="2"/>
+              <rect x="10" y="25" width="55" height="13" fill="#c84b2f" opacity=".55" rx="2"/>
+              <text x="68" y="36" font-size="8" fill="#0d0d0d" font-family="monospace">30% → 18%  (−40%)</text>
+
+              <text x="10" y="56" font-size="7.5" fill="#6b6560" font-family="monospace">Click-through Rate (↑ better)</text>
+              <rect x="10" y="61" width="185" height="13" fill="#ede9e0" rx="2"/>
+              <rect x="10" y="61" width="130" height="13" fill="#2563a8" opacity=".6" rx="2"/>
+              <text x="143" y="72" font-size="8" fill="#0d0d0d" font-family="monospace">43%→70%</text>
+
+              <text x="10" y="92" font-size="7.5" fill="#6b6560" font-family="monospace">Avg Session Depth</text>
+              <rect x="10" y="97" width="185" height="13" fill="#ede9e0" rx="2"/>
+              <rect x="10" y="97" width="110" height="13" fill="#2563a8" opacity=".45" rx="2"/>
+              <text x="123" y="108" font-size="8" fill="#0d0d0d" font-family="monospace">3.2→4.8 pages</text>
+
+              <text x="10" y="128" font-size="7.5" fill="#6b6560" font-family="monospace">Relevance Score</text>
+              <rect x="10" y="133" width="185" height="13" fill="#ede9e0" rx="2"/>
+              <rect x="10" y="133" width="148" height="13" fill="#2e7d32" opacity=".55" rx="2"/>
+              <text x="161" y="144" font-size="8" fill="#0d0d0d" font-family="monospace">0.81 (+0.12)</text>
+
+              <text x="10" y="172" font-size="7.5" fill="#6b6560" font-family="monospace">Metrics fed weekly back into</text>
+              <text x="10" y="183" font-size="7.5" fill="#6b6560" font-family="monospace">ranking model iteration cycle</text>
+            </svg>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="pf-footer"><a href="https://www.coursehero.com" target="_blank" class="portfolio-link">Course Hero ↗</a></div>
+    </div>
+
+    <!-- ── ZYNGA ── -->
+    <div class="pf-card" id="p-zynga">
+      <div class="pf-top">
+        <div class="pf-top-left">
+          <div class="pf-company">Zynga</div>
+          <div class="pf-role">Data Scientist · Gaming · Ads Product · CityVille</div>
+          <p class="pf-summary">Built CityVille launch analytics from zero — 32-metric scorecard adopted as Zynga's standard launch playbook for all titles. Improved ads fill rate 50→70% through match strategy analytics. Diagnosed DAU drops to root causes and drove targeted fixes.</p>
+          <div class="pf-chips">
+            <span class="chip">Gaming Analytics</span><span class="chip">Ads Product</span><span class="chip">Launch Playbook</span><span class="chip">Engagement RCA</span><span class="chip">Monetization</span>
+          </div>
+        </div>
+        <div class="pf-kpis">
+          <div class="pf-kpi"><span class="pf-kpi-n">32</span><span class="pf-kpi-l">Metrics Tracked</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">+20pp</span><span class="pf-kpi-l">Fill Rate Lift</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">All Titles</span><span class="pf-kpi-l">Playbook Adopted</span></div>
+        </div>
+      </div>
+      <div class="pf-viz">
+        <div class="pf-viz-label">CityVille · Ads Fill Rate · DAU Engagement Root Cause Analysis</div>
+        <div class="pf-viz-row">
+          <!-- Fill rate trend -->
+          <div class="pf-chart-wrap" style="flex:1.2">
+            <div class="viz-sublabel">Ads Fill Rate · Match Strategy Change Impact</div>
+            <svg viewBox="0 0 255 200" class="viz-svg">
+              <line x1="35" y1="10" x2="35" y2="158" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="35" y1="158" x2="245" y2="158" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="35" y1="128" x2="245" y2="128" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="35" y1="98" x2="245" y2="98" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="35" y1="68" x2="245" y2="68" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="35" y1="38" x2="245" y2="38" stroke="#ede9e0" stroke-width="1"/>
+              <text x="2" y="161" font-size="7.5" fill="#6b6560" font-family="monospace">40%</text>
+              <text x="2" y="131" font-size="7.5" fill="#6b6560" font-family="monospace">50%</text>
+              <text x="2" y="101" font-size="7.5" fill="#6b6560" font-family="monospace">60%</text>
+              <text x="2" y="71" font-size="7.5" fill="#6b6560" font-family="monospace">70%</text>
+              <text x="2" y="41" font-size="7.5" fill="#6b6560" font-family="monospace">80%</text>
+              <polyline points="42,128 65,126 88,124 108,122 128,120 142,120" fill="none" stroke="#6b6560" stroke-width="2" stroke-dasharray="4,2"/>
+              <polyline points="142,120 162,108 182,95 202,83 222,74 240,68" fill="none" stroke="#2563a8" stroke-width="2.5"/>
+              <polygon points="42,128 65,126 88,124 108,122 128,120 142,120 162,108 182,95 202,83 222,74 240,68 240,158 42,158" fill="rgba(37,99,168,0.07)"/>
+              <line x1="142" y1="10" x2="142" y2="158" stroke="#c84b2f" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <text x="145" y="22" font-size="7.5" fill="#c84b2f" font-family="monospace">Strategy</text>
+              <text x="145" y="32" font-size="7.5" fill="#c84b2f" font-family="monospace">change →</text>
+              <circle cx="42" cy="128" r="3" fill="#6b6560"/>
+              <text x="46" y="124" font-size="8" fill="#6b6560" font-family="monospace">50%</text>
+              <circle cx="240" cy="68" r="3" fill="#2563a8"/>
+              <text x="218" y="63" font-size="8" fill="#2563a8" font-family="monospace">70%</text>
+              <text x="35" y="175" font-size="7.5" fill="#6b6560" font-family="monospace">Launch</text>
+              <text x="205" y="175" font-size="7.5" fill="#6b6560" font-family="monospace">M+4</text>
+            </svg>
+          </div>
+          <!-- Ads KPI boxes -->
+          <div class="pf-chart-wrap" style="flex:0.9">
+            <div class="viz-sublabel">Ads Dashboard · Real-time KPIs</div>
+            <svg viewBox="0 0 190 200" class="viz-svg">
+              <rect x="8" y="12" width="82" height="50" fill="#ede9e0" rx="3"/>
+              <text x="49" y="35" font-size="16" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">70%</text>
+              <text x="49" y="54" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Fill Rate</text>
+              <rect x="100" y="12" width="82" height="50" fill="#ede9e0" rx="3"/>
+              <text x="141" y="35" font-size="16" fill="#2e7d32" font-family="monospace" text-anchor="middle" font-weight="600">2.1×</text>
+              <text x="141" y="54" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Ad Frequency</text>
+              <rect x="8" y="70" width="82" height="50" fill="#ede9e0" rx="3"/>
+              <text x="49" y="93" font-size="16" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">84%</text>
+              <text x="49" y="112" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Recall Diversity</text>
+              <rect x="100" y="70" width="82" height="50" fill="#ede9e0" rx="3"/>
+              <text x="141" y="93" font-size="15" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">$1.24</text>
+              <text x="141" y="112" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">eCPM</text>
+              <text x="95" y="142" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Real-time visibility enabled</text>
+              <text x="95" y="153" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Ad Ops + Product match</text>
+              <text x="95" y="164" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">strategy adjustments</text>
+            </svg>
+          </div>
+          <!-- DAU RCA -->
+          <div class="pf-chart-wrap" style="flex:1.2">
+            <div class="viz-sublabel">DAU Drop · Root Cause Decomposition (RCA Framework)</div>
+            <svg viewBox="0 0 235 200" class="viz-svg">
+              <line x1="30" y1="10" x2="30" y2="155" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="30" y1="155" x2="225" y2="155" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="30" y1="122" x2="225" y2="122" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="89" x2="225" y2="89" stroke="#ede9e0" stroke-width="1"/>
+              <line x1="30" y1="56" x2="225" y2="56" stroke="#ede9e0" stroke-width="1"/>
+              <text x="2" y="158" font-size="7" fill="#6b6560" font-family="monospace">−20</text>
+              <text x="2" y="125" font-size="7" fill="#6b6560" font-family="monospace">−10</text>
+              <text x="6" y="92" font-size="7" fill="#6b6560" font-family="monospace">0</text>
+              <text x="2" y="59" font-size="7" fill="#6b6560" font-family="monospace">+10</text>
+              <polyline points="36,42 58,40 78,38 96,36 114,36 126,57 138,77 150,82 164,74 178,62 192,52 208,44 220,40" fill="none" stroke="#2563a8" stroke-width="2.5"/>
+              <polygon points="36,42 58,40 78,38 96,36 114,36 126,57 138,77 150,82 164,74 178,62 192,52 208,44 220,40 220,155 36,155" fill="rgba(37,99,168,0.07)"/>
+              <rect x="114" y="10" width="44" height="145" fill="rgba(200,75,47,0.06)"/>
+              <!-- Annotations -->
+              <line x1="138" y1="77" x2="138" y2="100" stroke="#c84b2f" stroke-width="1.2"/>
+              <text x="100" y="108" font-size="7.5" fill="#c84b2f" font-family="monospace">Bug W+3 (−8%)</text>
+              <line x1="126" y1="57" x2="112" y2="70" stroke="#c84b2f" stroke-width="1.2"/>
+              <text x="52" y="76" font-size="7.5" fill="#c84b2f" font-family="monospace">Perf issue (−5%)</text>
+              <line x1="150" y1="82" x2="160" y2="100" stroke="#f0a500" stroke-width="1.2"/>
+              <text x="150" y="110" font-size="7.5" fill="#f0a500" font-family="monospace">Event delay</text>
+              <text x="178" y="43" font-size="7.5" fill="#2e7d32" font-family="monospace">Fixes</text>
+              <text x="176" y="52" font-size="7.5" fill="#2e7d32" font-family="monospace">shipped ✓</text>
+              <text x="35" y="170" font-size="7.5" fill="#6b6560" font-family="monospace">Launch</text>
+              <text x="195" y="170" font-size="7.5" fill="#6b6560" font-family="monospace">M+3</text>
+              <text x="30" y="188" font-size="7.5" fill="#6b6560" font-family="monospace">RCA: decompose by bug / perf / event · drives targeted fixes</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- PSM SECTION -->
+      <div class="pf-viz" style="border-top: 2px solid var(--rule); background: var(--highlight);">
+        <div class="pf-viz-label" style="color:var(--accent2)">Methodology Deep-dive · Propensity Score Matching for Gameplay Analysis</div>
+        <div class="pf-viz-row">
+          <!-- Why PSM: Whale problem -->
+          <div class="pf-chart-wrap" style="flex:1.1">
+            <div class="viz-sublabel">Problem: Big Whales Create Imbalanced Pre-Experiment Data</div>
+            <svg viewBox="0 0 240 230" class="viz-svg">
+              <rect x="8" y="10" width="224" height="22" fill="rgba(200,75,47,0.1)" stroke="#c84b2f" stroke-width="1" rx="2"/>
+              <text x="120" y="25" font-size="8.5" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Challenge: "Whale" Players Skew Data</text>
+              <text x="10" y="46" font-size="8" fill="#6b6560" font-family="monospace">Player spend distribution (pre-experiment)</text>
+              <!-- Right-skewed histogram -->
+              <rect x="10" y="52" width="12" height="55" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="24" y="72" width="12" height="35" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="38" y="84" width="12" height="23" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="52" y="91" width="12" height="16" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="66" y="96" width="12" height="11" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="80" y="99" width="12" height="8" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="94" y="101" width="12" height="6" fill="#2563a8" opacity=".7" rx="1"/>
+              <rect x="108" y="102" width="12" height="5" fill="#2563a8" opacity=".7" rx="1"/>
+              <!-- Whale spike far right -->
+              <rect x="190" y="80" width="14" height="27" fill="#c84b2f" opacity=".8" rx="1"/>
+              <text x="180" y="74" font-size="7.5" fill="#c84b2f" font-family="monospace">🐋 Whales</text>
+              <text x="183" y="84" font-size="7.5" fill="#c84b2f" font-family="monospace">top 1%</text>
+              <text x="183" y="94" font-size="7.5" fill="#c84b2f" font-family="monospace">&gt;50% spend</text>
+              <line x1="10" y1="107" x2="222" y2="107" stroke="#d4cfc6" stroke-width="1"/>
+              <text x="10" y="118" font-size="7.5" fill="#6b6560" font-family="monospace">$0       spend →       $10K+</text>
+              <rect x="8" y="126" width="224" height="40" fill="rgba(200,75,47,0.06)" stroke="#c84b2f" stroke-width="1" rx="2"/>
+              <text x="120" y="140" font-size="8" fill="#0d0d0d" font-family="monospace" text-anchor="middle">If whales land unevenly in test/control,</text>
+              <text x="120" y="151" font-size="8" fill="#c84b2f" font-family="monospace" text-anchor="middle">observed spend diff = whale imbalance,</text>
+              <text x="120" y="162" font-size="8" fill="#c84b2f" font-family="monospace" text-anchor="middle">not the true treatment effect</text>
+              <text x="10" y="182" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Covariates matched to balance groups:</text>
+              <text x="10" y="195" font-size="7.5" fill="#6b6560" font-family="monospace">• Pre-exp total spend (primary whale signal)</text>
+              <text x="10" y="207" font-size="7.5" fill="#6b6560" font-family="monospace">• Session frequency &amp; game stage</text>
+              <text x="10" y="219" font-size="7.5" fill="#6b6560" font-family="monospace">• Days since install · prior ad interactions</text>
+            </svg>
+          </div>
+          <!-- PSM pipeline with sampling with replacement -->
+          <div class="pf-chart-wrap" style="flex:1.2">
+            <div class="viz-sublabel">PSM Pipeline · Sampling with Replacement → Balanced Groups</div>
+            <svg viewBox="0 0 255 230" class="viz-svg">
+              <rect x="8" y="10" width="238" height="26" fill="#ede9e0" rx="2"/>
+              <text x="127" y="27" font-size="8.5" fill="#0d0d0d" font-family="monospace" text-anchor="middle">① Fit logistic regression: P(treated | covariates)</text>
+              <line x1="127" y1="36" x2="127" y2="47" stroke="#d4cfc6" stroke-width="1.5"/>
+              <polygon points="122,45 132,45 127,51" fill="#d4cfc6"/>
+              <rect x="8" y="51" width="238" height="26" fill="#ede9e0" rx="2"/>
+              <text x="127" y="68" font-size="8.5" fill="#0d0d0d" font-family="monospace" text-anchor="middle">② Each player assigned propensity score ∈ (0,1)</text>
+              <line x1="127" y1="77" x2="127" y2="88" stroke="#d4cfc6" stroke-width="1.5"/>
+              <polygon points="122,86 132,86 127,92" fill="#d4cfc6"/>
+              <rect x="8" y="92" width="238" height="40" fill="rgba(37,99,168,0.1)" stroke="#2563a8" stroke-width="1.5" rx="2"/>
+              <text x="127" y="107" font-size="8.5" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">③ Match WITH Replacement (key for whale data)</text>
+              <text x="127" y="119" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">A whale control player can be reused as match</text>
+              <text x="127" y="130" font-size="7.5" fill="#6b6560" font-family="monospace" text-anchor="middle">for multiple treated players → preserves power</text>
+              <line x1="127" y1="132" x2="127" y2="143" stroke="#d4cfc6" stroke-width="1.5"/>
+              <polygon points="122,141 132,141 127,147" fill="#d4cfc6"/>
+              <rect x="8" y="147" width="238" height="26" fill="#ede9e0" rx="2"/>
+              <text x="127" y="164" font-size="8.5" fill="#0d0d0d" font-family="monospace" text-anchor="middle">④ Verify balance: SMD &lt; 0.1 on all covariates</text>
+              <line x1="127" y1="173" x2="127" y2="184" stroke="#d4cfc6" stroke-width="1.5"/>
+              <polygon points="122,182 132,182 127,188" fill="#d4cfc6"/>
+              <rect x="8" y="188" width="238" height="26" fill="rgba(37,99,168,0.1)" stroke="#2563a8" stroke-width="1" rx="2"/>
+              <text x="127" y="205" font-size="8.5" fill="#2563a8" font-family="monospace" text-anchor="middle">⑤ ATT estimate on matched sample → causal lift</text>
+              <rect x="8" y="220" width="238" height="22" fill="rgba(46,125,50,0.1)" stroke="#2e7d32" stroke-width="1" rx="2"/>
+              <text x="127" y="235" font-size="8" fill="#2e7d32" font-family="monospace" text-anchor="middle">Result: In-game event → +18% monetization (whale-adjusted)</text>
+            </svg>
+          </div>
+          <!-- Before/after balance -->
+          <div class="pf-chart-wrap" style="flex:1.1">
+            <div class="viz-sublabel">Spend Balance · Before vs. After Matching</div>
+            <svg viewBox="0 0 230 230" class="viz-svg">
+              <text x="10" y="16" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">Before Matching — Whale imbalance</text>
+              <text x="10" y="30" font-size="7.5" fill="#2563a8" font-family="monospace">Treated</text>
+              <rect x="58" y="22" width="6" height="12" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="66" y="20" width="6" height="14" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="74" y="23" width="6" height="11" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="130" y="16" width="8" height="18" fill="#c84b2f" opacity=".7" rx="1"/>
+              <rect x="150" y="14" width="8" height="20" fill="#c84b2f" opacity=".7" rx="1"/>
+              <text x="143" y="12" font-size="7" fill="#c84b2f" font-family="monospace">🐋 heavy</text>
+              <text x="10" y="50" font-size="7.5" fill="#6b6560" font-family="monospace">Control</text>
+              <rect x="58" y="42" width="6" height="12" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="66" y="44" width="6" height="10" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="74" y="43" width="6" height="11" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="130" y="48" width="4" height="8" fill="#6b6560" opacity=".4" rx="1"/>
+              <text x="138" y="46" font-size="7" fill="#c84b2f" font-family="monospace">🐋 sparse</text>
+              <text x="10" y="68" font-size="7.5" fill="#c84b2f" font-family="monospace">Treated $420 vs Control $180 → BIASED</text>
+              <line x1="8" y1="78" x2="222" y2="78" stroke="#d4cfc6" stroke-width="1" stroke-dasharray="4,3"/>
+              <text x="10" y="94" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">After Matching (with replacement) — Balanced</text>
+              <text x="10" y="108" font-size="7.5" fill="#2563a8" font-family="monospace">Treated*</text>
+              <rect x="58" y="100" width="6" height="12" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="66" y="98" width="6" height="14" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="74" y="101" width="6" height="11" fill="#2563a8" opacity=".6" rx="1"/>
+              <rect x="130" y="98" width="6" height="14" fill="#2563a8" opacity=".5" rx="1"/>
+              <text x="10" y="126" font-size="7.5" fill="#6b6560" font-family="monospace">Control*</text>
+              <rect x="58" y="118" width="6" height="12" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="66" y="116" width="6" height="14" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="74" y="119" width="6" height="11" fill="#6b6560" opacity=".5" rx="1"/>
+              <rect x="130" y="116" width="6" height="14" fill="#6b6560" opacity=".4" rx="1"/>
+              <text x="140" y="114" font-size="7" fill="#2563a8" font-family="monospace">reused ×3</text>
+              <text x="10" y="141" font-size="7.5" fill="#2e7d32" font-family="monospace">Treated $310 vs Control $305 ✓ Balanced</text>
+              <text x="10" y="160" font-size="8" fill="#6b6560" font-family="monospace" font-weight="600">SMD Check (must be &lt; 0.1)</text>
+              <text x="10" y="173" font-size="7.5" fill="#6b6560" font-family="monospace">Pre-exp spend</text>
+              <rect x="100" y="166" width="100" height="9" fill="#ede9e0" rx="1"/>
+              <rect x="100" y="166" width="5" height="9" fill="#2e7d32" opacity=".7" rx="1"/>
+              <text x="202" y="174" font-size="7.5" fill="#2e7d32" font-family="monospace">0.03 ✓</text>
+              <text x="10" y="188" font-size="7.5" fill="#6b6560" font-family="monospace">Session freq</text>
+              <rect x="100" y="181" width="100" height="9" fill="#ede9e0" rx="1"/>
+              <rect x="100" y="181" width="7" height="9" fill="#2e7d32" opacity=".7" rx="1"/>
+              <text x="202" y="189" font-size="7.5" fill="#2e7d32" font-family="monospace">0.04 ✓</text>
+              <text x="10" y="203" font-size="7.5" fill="#6b6560" font-family="monospace">Player level</text>
+              <rect x="100" y="196" width="100" height="9" fill="#ede9e0" rx="1"/>
+              <rect x="100" y="196" width="6" height="9" fill="#2e7d32" opacity=".7" rx="1"/>
+              <text x="202" y="204" font-size="7.5" fill="#2e7d32" font-family="monospace">0.03 ✓</text>
+              <text x="10" y="219" font-size="7.5" fill="#6b6560" font-family="monospace">* Whale control players reused as needed</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="pf-footer"><a href="https://www.zynga.com" target="_blank" class="portfolio-link">Zynga ↗</a></div>
+    </div>
+
+  </div>
+</section>
+<!-- PROJECTS (Currently Working On) -->
+<section id="projects">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">03 —</span>
+      <h2 class="section-title">Currently Building</h2>
+    </div>
+    <div class="projects-grid">
+
+      <div class="project-card">
+        <span class="project-status">🟢 Active</span>
+        <h3 class="project-title">Clawbot · AI Automation Suite</h3>
+        <p class="project-desc">Building Clawbot with Claude Code — an AI assistant that automates real daily workflows: email inbox cleanup and triage, on-demand dashboard creation from raw data, and music video editing pipelines. Shipping real tools with real user value.</p>
+        <div class="project-tags">
+          <span class="project-tag">Claude Code</span>
+          <span class="project-tag">LLM Automation</span>
+          <span class="project-tag">Prompt Eng.</span>
+          <span class="project-tag">AI Product</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <span class="project-status">🟡 In Progress</span>
+        <h3 class="project-title">AI PM Bootcamp Capstone</h3>
+        <p class="project-desc">A comprehensive product spec tackling an AI-driven problem, combining deep data science expertise with product management frameworks. Covers problem definition, user research, PRD, success metrics, and go-to-market strategy.</p>
+        <div class="project-tags">
+          <span class="project-tag">Product Strategy</span>
+          <span class="project-tag">PRD</span>
+          <span class="project-tag">AI</span>
+          <span class="project-tag">0-to-1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-num">04 —</span>
+      <h2 class="section-title">Tech Stack</h2>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-col">
+        <div class="stack-col-title">Languages & Query</div>
+        <div class="stack-items">
+          <span class="stack-item">SQL</span>
+          <span class="stack-item">Python</span>
+          <span class="stack-item">R</span>
+        </div>
+      </div>
+      <div class="stack-col">
+        <div class="stack-col-title">Data Engineering</div>
+        <div class="stack-items">
+          <span class="stack-item">dbt</span>
+          <span class="stack-item">Snowflake</span>
+          <span class="stack-item">MySQL</span>
+          <span class="stack-item">ETL Pipelines</span>
+        </div>
+      </div>
+      <div class="stack-col">
+        <div class="stack-col-title">AI & Experimentation</div>
+        <div class="stack-items">
+          <span class="stack-item">LLM Integration</span>
+          <span class="stack-item">Prompt Engineering</span>
+          <span class="stack-item">Embedding Models</span>
+          <span class="stack-item">Diff-in-Diff</span>
+          <span class="stack-item">Propensity Scoring</span>
+          <span class="stack-item">Bootstrapping</span>
+        </div>
+      </div>
+      <div class="stack-col">
+        <div class="stack-col-title">Analytics & Viz</div>
+        <div class="stack-items">
+          <span class="stack-item">Self-Serve Dashboards</span>
+          <span class="stack-item">Executive Reporting</span>
+          <span class="stack-item">Data Visualization</span>
+          <span class="stack-item">Power Analysis</span>
+          <span class="stack-item">Regression Adjustment</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section">
+  <div class="section-inner">
+    <div class="contact-left">
+      <div class="section-header" style="margin-bottom:1rem">
+        <span class="section-num">05 —</span>
+        <h2 class="section-title" style="color:var(--paper)">Let's Connect</h2>
+      </div>
+      <div class="contact-motto">"Turn data into products that matter."</div>
+      <p class="contact-desc">I'm always interested in connecting with fellow builders, PMs, data scientists, and anyone passionate about using data to create products that improve people's lives.</p>
+    </div>
+    <div class="contact-links">
+      <a href="https://github.com/clairezhu32" target="_blank" class="contact-link">
+        <span class="contact-link-icon">⌥</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">GitHub</span>
+          github.com/clairezhu32
+        </div>
+      </a>
+      <a href="https://www.linkedin.com/in/clairehzhu" target="_blank" class="contact-link">
+        <span class="contact-link-icon">in</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">LinkedIn</span>
+          linkedin.com/in/clairehzhu
+        </div>
+      </a>
+      <a href="mailto:clairehzhu@gmail.com" class="contact-link">
+        <span class="contact-link-icon">@</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">Email</span>
+          clairehzhu@gmail.com
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+   <p>© 2025 Claire · Data-Drawn Product Builder</p>
+  <p>Built with intention · Powered by data</p>
+</footer>
+
+</body>
+</html>
