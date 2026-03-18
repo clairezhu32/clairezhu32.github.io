@@ -204,16 +204,13 @@
   }
 
   .company-badge {
-font-family: 'Syne', sans-serif;
-font-weight: 700; font-size: 0.78rem;
-letter-spacing: 0.05em;
-color: var(--ink); opacity: 0.4;
-transition: opacity 0.2s;
-display: inline-block;
-width: 70px;
-text-align: center;
- }
-  
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--ink); opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+
   .company-badge:hover { opacity: 1; }
 
   /* SECTION STRUCTURE */
@@ -527,11 +524,14 @@ text-align: center;
   /* ── COMPACT PORTFOLIO CARDS ── */
   .pf-card {
     border: 1px solid var(--rule);
-    margin-bottom: 2rem;
+    border-radius: 4px;
+    margin-bottom: 2.5rem;
     background: var(--paper);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     transition: box-shadow 0.3s;
+    overflow: hidden;
   }
-  .pf-card:hover { box-shadow: 0 4px 28px rgba(0,0,0,0.06); }
+  .pf-card:hover { box-shadow: 0 6px 32px rgba(0,0,0,0.1); }
 
   .pf-top {
     display: flex; justify-content: space-between; align-items: flex-start;
@@ -819,7 +819,7 @@ text-align: center;
 </section>
 
 <!-- PORTFOLIO -->
-<section id="impact">
+<section id="impact" style="background: var(--cream)">
   <div class="section-inner">
     <div class="section-header">
       <span class="section-num">02 —</span>
@@ -844,10 +844,10 @@ text-align: center;
         </div>
       </div>
       <div class="pf-viz">
-        <div class="pf-viz-label">HELOC Funnel · IR→CL Conversion &amp; Automation Progress</div>
+        <div class="pf-viz-label">HELOC Ops · Funnel Analytics &amp; Task Automation Prioritization</div>
         <div class="pf-viz-row">
           <!-- Funnel waterfall -->
-          <div class="pf-chart-wrap" style="flex:1">
+          <div class="pf-chart-wrap" style="flex:0.9">
             <div class="viz-sublabel">Funnel Drop-off (per 100 applications)</div>
             <svg viewBox="0 0 240 220" class="viz-svg">
               <rect x="10" y="18" width="200" height="26" fill="#2563a8" rx="2"/>
@@ -870,30 +870,106 @@ text-align: center;
               <text x="56" y="219" font-size="8" fill="#c84b2f" font-family="monospace">Goal: 40 closed</text>
             </svg>
           </div>
-          <!-- IR→CL trend -->
+          <!-- Task Volume vs Impact Matrix -->
           <div class="pf-chart-wrap" style="flex:1.6">
-            <div class="viz-sublabel">IR→CL Weekly Rate · Backlog vs. Automation Launches (Goal 40%)</div>
-            <svg viewBox="0 0 380 220" class="viz-svg">
-              <line x1="38" y1="10" x2="38" y2="175" stroke="#d4cfc6" stroke-width="1"/>
-              <line x1="38" y1="175" x2="370" y2="175" stroke="#d4cfc6" stroke-width="1"/>
-              <line x1="38" y1="140" x2="370" y2="140" stroke="#ede9e0" stroke-width="1"/>
-              <line x1="38" y1="105" x2="370" y2="105" stroke="#ede9e0" stroke-width="1"/>
-              <line x1="38" y1="70" x2="370" y2="70" stroke="#ede9e0" stroke-width="1"/>
-              <text x="2" y="178" font-size="8" fill="#6b6560" font-family="monospace">0%</text>
-              <text x="2" y="143" font-size="8" fill="#6b6560" font-family="monospace">10%</text>
-              <text x="2" y="108" font-size="8" fill="#6b6560" font-family="monospace">20%</text>
-              <text x="2" y="73" font-size="8" fill="#6b6560" font-family="monospace">30%</text>
-              <line x1="38" y1="35" x2="370" y2="35" stroke="#c84b2f" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="335" y="30" font-size="8" fill="#c84b2f" font-family="monospace">Goal 40%</text>
-              <polyline points="45,56 75,102 105,129 125,123 145,131 170,109 195,109 215,109 240,92 260,96 280,105 300,109 320,129 345,160 365,160" fill="none" stroke="#2563a8" stroke-width="2.5" stroke-linejoin="round"/>
-              <polygon points="45,56 75,102 105,129 125,123 145,131 170,109 195,109 215,109 240,92 260,96 280,105 300,109 320,129 345,160 365,160 365,175 45,175" fill="rgba(37,99,168,0.07)"/>
-              <line x1="240" y1="10" x2="240" y2="175" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3"/>
-              <text x="243" y="22" font-size="8" fill="#2e7d32" font-family="monospace">Lien DQ auto</text>
-              <text x="243" y="32" font-size="8" fill="#2e7d32" font-family="monospace">+12pp →</text>
-              <text x="38" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Nov 2024</text>
-              <text x="155" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Jan 2025</text>
-              <text x="305" y="192" font-size="7.5" fill="#6b6560" font-family="monospace">Mar 2025</text>
-              <text x="42" y="207" font-size="7.5" fill="#6b6560" font-family="monospace">Analytics infra + automation roadmap drove capacity recovery</text>
+            <div class="viz-sublabel">Ops Task Prioritization · Volume vs. Engineering Effort Matrix</div>
+            <svg viewBox="0 0 440 260" class="viz-svg">
+              <!-- Axes -->
+              <line x1="55" y1="10" x2="55" y2="200" stroke="#d4cfc6" stroke-width="1"/>
+              <line x1="55" y1="200" x2="430" y2="200" stroke="#d4cfc6" stroke-width="1"/>
+              <!-- Axis labels -->
+              <text x="242" y="218" font-size="8" fill="#6b6560" font-family="monospace" text-anchor="middle">Task Volume (weekly cases)</text>
+              <text x="12" y="105" font-size="8" fill="#6b6560" font-family="monospace" text-anchor="middle" transform="rotate(-90,12,105)">Eng. Effort to Automate</text>
+              <!-- Quadrant dividers -->
+              <line x1="55" y1="105" x2="430" y2="105" stroke="#ede9e0" stroke-width="1" stroke-dasharray="4,3"/>
+              <line x1="242" y1="10" x2="242" y2="200" stroke="#ede9e0" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- Quadrant labels -->
+              <text x="100" y="22" font-size="6.5" fill="#d4cfc6" font-family="monospace" font-weight="600">LOW VOL · HIGH EFFORT</text>
+              <text x="260" y="22" font-size="6.5" fill="#d4cfc6" font-family="monospace" font-weight="600">HIGH VOL · HIGH EFFORT</text>
+              <text x="100" y="196" font-size="6.5" fill="#6b6560" font-family="monospace" font-weight="600">LOW VOL · LOW EFFORT</text>
+              <text x="260" y="196" font-size="6.5" fill="#2e7d32" font-family="monospace" font-weight="600">★ AUTOMATE FIRST</text>
+              <!-- X axis ticks -->
+              <text x="55" y="210" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">Low</text>
+              <text x="242" y="210" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">Med</text>
+              <text x="425" y="210" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">High</text>
+              <!-- Y axis ticks -->
+              <text x="50" y="198" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="end">Low</text>
+              <text x="50" y="108" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="end">Med</text>
+              <text x="50" y="16" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="end">High</text>
+
+              <!-- ── AUTOMATE FIRST: bottom-right (high vol, low effort) ── -->
+
+              <!-- DTI Calculation: high vol, low effort -->
+              <circle cx="390" cy="175" r="16" fill="#2563a8" opacity=".18" stroke="#2563a8" stroke-width="1.5"/>
+              <circle cx="390" cy="175" r="3.5" fill="#2563a8"/>
+              <text x="390" y="163" font-size="7" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">DTI Analysis</text>
+              <text x="390" y="153" font-size="6.5" fill="#2563a8" font-family="monospace" text-anchor="middle">✓ Auto</text>
+
+              <!-- Lien / Mortgage Verification: high vol, low effort -->
+              <circle cx="350" cy="162" r="15" fill="#2563a8" opacity=".15" stroke="#2563a8" stroke-width="1.5"/>
+              <circle cx="350" cy="162" r="3.5" fill="#2563a8"/>
+              <text x="350" y="182" font-size="7" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">Mortgage Verify</text>
+              <text x="350" y="192" font-size="6.5" fill="#2563a8" font-family="monospace" text-anchor="middle">✓ Auto</text>
+
+              <!-- Identity Verification: high vol, low effort -->
+              <circle cx="415" cy="155" r="14" fill="#2563a8" opacity=".14" stroke="#2563a8" stroke-width="1.5"/>
+              <circle cx="415" cy="155" r="3.5" fill="#2563a8"/>
+              <text x="415" y="143" font-size="7" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">Identity Verify</text>
+              <text x="415" y="133" font-size="6.5" fill="#2563a8" font-family="monospace" text-anchor="middle">✓ Auto</text>
+
+              <!-- Review Other Liabilities: high vol, low effort -->
+              <circle cx="305" cy="178" r="13" fill="#2563a8" opacity=".13" stroke="#2563a8" stroke-width="1.5"/>
+              <circle cx="305" cy="178" r="3" fill="#2563a8"/>
+              <text x="305" y="166" font-size="7" fill="#2563a8" font-family="monospace" text-anchor="middle" font-weight="600">Other Liabilities</text>
+              <text x="305" y="156" font-size="6.5" fill="#2563a8" font-family="monospace" text-anchor="middle">✓ Auto</text>
+
+              <!-- ── IN PROGRESS: center ── -->
+
+              <!-- Income Verification: high vol, med effort -->
+              <circle cx="380" cy="100" r="17" fill="#c84b2f" opacity=".15" stroke="#c84b2f" stroke-width="1.5"/>
+              <circle cx="380" cy="100" r="3.5" fill="#c84b2f"/>
+              <text x="380" y="88" font-size="7" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Income Verify</text>
+              <text x="380" y="78" font-size="6.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">⚙ In Progress</text>
+
+              <!-- Credit Verification: med-high vol, med effort -->
+              <circle cx="290" cy="112" r="16" fill="#c84b2f" opacity=".13" stroke="#c84b2f" stroke-width="1.5"/>
+              <circle cx="290" cy="112" r="3.5" fill="#c84b2f"/>
+              <text x="290" y="130" font-size="7" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Credit Verify</text>
+              <text x="290" y="140" font-size="6.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">⚙ In Progress</text>
+
+              <!-- Primary Residence: med vol, med effort -->
+              <circle cx="210" cy="108" r="14" fill="#c84b2f" opacity=".12" stroke="#c84b2f" stroke-width="1.5"/>
+              <circle cx="210" cy="108" r="3" fill="#c84b2f"/>
+              <text x="210" y="96" font-size="7" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Primary Residence</text>
+              <text x="210" y="86" font-size="6.5" fill="#c84b2f" font-family="monospace" text-anchor="middle">⚙ In Progress</text>
+
+              <!-- Bank Statements: med vol, med effort -->
+              <circle cx="255" cy="145" r="13" fill="#c84b2f" opacity=".11" stroke="#c84b2f" stroke-width="1.5"/>
+              <circle cx="255" cy="145" r="3" fill="#c84b2f"/>
+              <text x="255" y="163" font-size="7" fill="#c84b2f" font-family="monospace" text-anchor="middle" font-weight="600">Bank Statements</text>
+
+              <!-- ── MANUAL: high effort ── -->
+
+              <!-- Property Appraisal: low vol, high effort -->
+              <circle cx="105" cy="45" r="15" fill="#6b6560" opacity=".15" stroke="#6b6560" stroke-width="1.2"/>
+              <circle cx="105" cy="45" r="3" fill="#6b6560"/>
+              <text x="105" y="33" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">Property Appraisal</text>
+              <text x="105" y="23" font-size="6.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Manual</text>
+
+              <!-- Insurance: med vol, high effort -->
+              <circle cx="220" cy="55" r="12" fill="#6b6560" opacity=".12" stroke="#6b6560" stroke-width="1.2"/>
+              <circle cx="220" cy="55" r="3" fill="#6b6560"/>
+              <text x="220" y="43" font-size="7" fill="#6b6560" font-family="monospace" text-anchor="middle">Homeowner Insurance</text>
+              <text x="220" y="33" font-size="6.5" fill="#6b6560" font-family="monospace" text-anchor="middle">Manual</text>
+
+              <!-- Legend -->
+              <circle cx="62" cy="236" r="5" fill="#2563a8" opacity=".3" stroke="#2563a8" stroke-width="1"/>
+              <text x="70" y="240" font-size="7" fill="#2563a8" font-family="monospace">Automated</text>
+              <circle cx="138" cy="236" r="5" fill="#c84b2f" opacity=".3" stroke="#c84b2f" stroke-width="1"/>
+              <text x="146" y="240" font-size="7" fill="#c84b2f" font-family="monospace">In Progress</text>
+              <circle cx="210" cy="236" r="5" fill="#6b6560" opacity=".3" stroke="#6b6560" stroke-width="1"/>
+              <text x="218" y="240" font-size="7" fill="#6b6560" font-family="monospace">Manual</text>
+              <text x="310" y="240" font-size="7" fill="#6b6560" font-family="monospace">Bubble size = weekly case volume</text>
             </svg>
           </div>
         </div>
@@ -1303,7 +1379,6 @@ text-align: center;
               <text x="10" y="183" font-size="7.5" fill="#6b6560" font-family="monospace">ranking model iteration cycle</text>
             </svg>
           </div>
-          </div>
         </div>
       </div>
       <div class="pf-footer"><a href="https://www.coursehero.com" target="_blank" class="portfolio-link">Course Hero ↗</a></div>
@@ -1311,23 +1386,23 @@ text-align: center;
 
     <!-- ── ZYNGA ── -->
     <div class="pf-card" id="p-zynga">
-      <div class="pf-top">
+      <div class="pf-top" style="background:var(--cream); border-bottom:1px solid var(--rule);">
         <div class="pf-top-left">
           <div class="pf-company">Zynga</div>
           <div class="pf-role">Data Scientist · Gaming · Ads Product · CityVille</div>
-          <p class="pf-summary">Built CityVille launch analytics from zero — 32-metric scorecard adopted as Zynga's standard launch playbook for all titles. Improved ads fill rate 50→70% through match strategy analytics. Diagnosed DAU drops to root causes and drove targeted fixes.</p>
+          <p class="pf-summary">Built CityVille analytics from zero — a 32-metric game launch scorecard (engagement, retention, monetization) adopted as Zynga's standard playbook across all titles, plus a dedicated ads analytics dashboard tracking fill rate, eCPM, and frequency. Diagnosed DAU drops to root causes and drove targeted fixes.</p>
           <div class="pf-chips">
             <span class="chip">Gaming Analytics</span><span class="chip">Ads Product</span><span class="chip">Launch Playbook</span><span class="chip">Engagement RCA</span><span class="chip">Monetization</span>
           </div>
         </div>
         <div class="pf-kpis">
-          <div class="pf-kpi"><span class="pf-kpi-n">32</span><span class="pf-kpi-l">Metrics Tracked</span></div>
-          <div class="pf-kpi"><span class="pf-kpi-n">+20pp</span><span class="pf-kpi-l">Fill Rate Lift</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">32</span><span class="pf-kpi-l">Launch Metrics</span></div>
+          <div class="pf-kpi"><span class="pf-kpi-n">+20pp</span><span class="pf-kpi-l">Ads Fill Rate Lift</span></div>
           <div class="pf-kpi"><span class="pf-kpi-n">All Titles</span><span class="pf-kpi-l">Playbook Adopted</span></div>
         </div>
       </div>
       <div class="pf-viz">
-        <div class="pf-viz-label">CityVille · Ads Fill Rate · DAU Engagement Root Cause Analysis</div>
+        <div class="pf-viz-label">CityVille · Game Launch Scorecard · Ads Dashboard · DAU Root Cause Analysis</div>
         <div class="pf-viz-row">
           <!-- Fill rate trend -->
           <div class="pf-chart-wrap" style="flex:1.2">
